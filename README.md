@@ -8,11 +8,18 @@
 fast bun version manager
 ```
 
-Currently bvm only works on linux but the plan is to support windows and macos in the future as well.
+Currently bvm only works on Linux but the plan is to support Windows and MacOS in the future as well.
 
 ## Install
 
 `cargo install --git https://github.com/swz-git/bvm`
 
+## Shell setup
+
 add this to your `.bashrc` (or equivalent for your shell, `.zshrc` for zsh)
+
 `eval "$(bvm env)"`
+
+## Help
+
+`bvm --help` or `bvm [SUBCOMMAND] --help`
