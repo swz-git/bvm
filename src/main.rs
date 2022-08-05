@@ -20,9 +20,13 @@ struct Cli {
 pub enum Commands {
     /// Install a bun version
     Install(cmds::cmd_install::CliCommand),
+    /// Choose a bun version to use (global)
     Use(cmds::cmd_use::CliCommand),
+    /// Print required environment variables
     Env(cmds::cmd_env::CliCommand),
+    /// List all versions installed
     List(cmds::cmd_list::CliCommand),
+    /// Uninstall a bun version
     Uninstall(cmds::cmd_uninstall::CliCommand),
 }
 

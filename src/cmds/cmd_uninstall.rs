@@ -7,7 +7,7 @@ use crate::{utils::get_version_bin, Commands};
 
 #[derive(Parser)]
 pub struct CliCommand {
-    /// Version to install
+    /// Version to uninstall
     /// ex. 0.1.6 or latest
     #[clap(value_parser)]
     version: String,

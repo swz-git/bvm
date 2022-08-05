@@ -10,6 +10,7 @@ use crate::{
 #[derive(Parser)]
 pub struct CliCommand {
     #[clap(value_parser)]
+    /// Version to use (global)
     version: Option<String>,
 }
 
