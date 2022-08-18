@@ -17,6 +17,8 @@ pub fn get_data_dir() -> String {
 
 pub fn semver_sort(version: Vec<String>) -> Vec<String> {
     return version; // BUG: CRITICAL This should sort using semver
+                    // Should probably be implemented using https://discord.com/channels/273534239310479360/273541522815713281/1009949089217134733
+                    // https://docs.rs/semver/latest/semver/struct.Version.html#impl-Ord-for-Version
 }
 
 // takes "bun-v1.2", "v1.12.0" and "6" and returns "1.2.0", "1.12.0" and "6.0.0"
