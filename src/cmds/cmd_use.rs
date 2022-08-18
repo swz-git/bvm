@@ -3,7 +3,7 @@ use std::{env, fs, path::Path};
 use clap::Parser;
 
 use crate::{
-    utils::{get_data_dir, get_version_bin},
+    utils::{get_current_version, get_data_dir, get_version_bin, parse_version_string},
     Commands,
 };
 
@@ -23,6 +23,15 @@ pub fn match_and_run(commands: &Commands) {
     };
 }
 
+fn print_version(symlink_path: &Path) {
+    let version = get_current_version(symlink_path);
+    if version.is_none() {
+        println!("No version of bun is activated using bvm.");
+    } else {
+        println!("Using bun version {}", version.unwrap());
+    }
+}
+
 fn run(cmd: &CliCommand) {
     if env::var("BVM_ACTIVATED").unwrap_or(String::from("")) != "1" {
         println!("WARNING: You haven't added `eval \"$(bvm env)\"` to your shell init yet, you won't be able to use bun through bvm.\n")
@@ -32,20 +41,15 @@ fn run(cmd: &CliCommand) {
     let symlink_path = symlink_pathbuf.as_path();
     match &cmd.version {
         None => {
-            if !symlink_path.exists() {
-                return println!("No version of bun activated with bvm");
-            } else {
-                let actual = symlink_path
-                    .read_link()
-                    .expect("Symlink path didn't contain symlink");
-                let version = actual.parent().unwrap().to_str().unwrap();
-                return println!("Currently using {}", version);
-            }
+            print_version(symlink_path);
+            return;
         }
         _ => {}
     }
-    let bin = get_version_bin(&cmd.version.as_ref().unwrap(), false)
-        .expect("Couldn't find that version installed");
+    let bin = get_version_bin(&cmd.version.as_ref().unwrap(), false).expect(&*format!(
+        "Couldn't find version installed: {}",
+        parse_version_string(&cmd.version.as_ref().unwrap(), false)
+    ));
     if !symlink_dir.exists() {
         fs::create_dir_all(symlink_dir).unwrap();
     }
@@ -54,5 +58,5 @@ fn run(cmd: &CliCommand) {
     }
     std::os::unix::fs::symlink(&bin, symlink_path).expect("Failed to create symlink");
 
-    println!("Using {}", bin);
+    print_version(symlink_path);
 }

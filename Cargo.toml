@@ -19,6 +19,7 @@ futures-util = "0.3.21"
 bytes = "1.0.1"
 tokio = { version = "1.20.1", features = ["full"] }
 dialoguer = "0.10.2"
+regex = "1.6.0"
 
 [dependencies.uuid]
 version = "1.1.2"

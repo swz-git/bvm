@@ -54,9 +54,8 @@ async fn run(cmd: &CliCommand) {
         _ => releases
             .items
             .iter()
-            .find(|x| x.tag_name.contains(&cmd.version))
-            .unwrap_or_else(|| panic!("Couldn't find a release containing {}",
-                cmd.version)),
+            .find(|x| x.tag_name.contains(&cmd.version)) // TODO: Fix better search, probably using starts_with
+            .unwrap_or_else(|| panic!("Couldn't find a release containing {}", cmd.version)),
     };
 
     println!("Found {} ✔", release.tag_name);

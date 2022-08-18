@@ -16,7 +16,7 @@ pub fn match_and_run(commands: &Commands) {
 
 fn run(_cmd: &CliCommand) {
     println!("Installed versions:");
-    let versions = get_available_versions();
+    let versions = get_available_versions(false);
     for version in versions {
         println!("- {}", version)
     }
