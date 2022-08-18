@@ -21,7 +21,7 @@ pub fn semver_sort(version: Vec<String>) -> Vec<String> {
 
 // takes "bun-v1.2", "v1.12.0" and "6" and returns "1.2.0", "1.12.0" and "6.0.0"
 pub fn parse_version_string(version: &str, fill_empty: bool) -> String {
-    let re = Regex::new(r"^(bun-v|v)?(?P<version>\d(\.\d+)+)$").unwrap();
+    let re = Regex::new(r"^(bun-v|v)?(?P<version>\d(\.\d+)*)$").unwrap();
     let version_matches = re
         .captures(version)
         .expect(&*format!("Invalid version string: {}", version));
