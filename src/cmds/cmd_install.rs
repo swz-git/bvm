@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    utils::{download_with_progress, get_data_dir},
+    utils::{download_with_progress, get_data_dir, parse_version_string},
     Commands,
 };
 
@@ -54,7 +54,11 @@ async fn run(cmd: &CliCommand) {
         _ => releases
             .items
             .iter()
-            .find(|x| x.tag_name.contains(&cmd.version)) // TODO: Fix better search, probably using starts_with
+            .find(|x| {
+                x.tag_name.starts_with(
+                    &(String::from("bun-v") + &*parse_version_string(&cmd.version, false)),
+                )
+            }) // TODO: Fix better search, probably using starts_with
             .unwrap_or_else(|| panic!("Couldn't find a release containing {}", cmd.version)),
     };
 
@@ -69,7 +73,7 @@ async fn run(cmd: &CliCommand) {
         );
         return;
     } else if outpath.exists() {
-        fs::remove_dir(&outdir).unwrap();
+        fs::remove_dir_all(&outdir).unwrap();
     }
 
     let bun_os_name = match env::consts::OS {
@@ -121,5 +125,5 @@ async fn run(cmd: &CliCommand) {
         panic!("Couldn't find bun executable in zip")
     }
 
-    println!("Installed bun {}", release.tag_name);
+    println!("Installed {}", release.tag_name);
 }

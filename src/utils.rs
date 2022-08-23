@@ -15,15 +15,25 @@ pub fn get_data_dir() -> String {
     };
 }
 
-pub fn semver_sort(version: Vec<String>) -> Vec<String> {
-    return version; // BUG: CRITICAL This should sort using semver
-                    // Should probably be implemented using https://discord.com/channels/273534239310479360/273541522815713281/1009949089217134733
-                    // https://docs.rs/semver/latest/semver/struct.Version.html#impl-Ord-for-Version
+pub fn semver_sort(versions: Vec<String>) -> Vec<String> {
+    let parsed_versions: Vec<String> = versions
+        .iter()
+        .map(|v| parse_version_string(v, true))
+        .collect();
+
+    let mut semversions: Vec<semver::Version> = parsed_versions
+        .iter()
+        .map(|v| semver::Version::parse(v).expect("Invalid semver version, cant't sort"))
+        .collect();
+
+    semversions.sort();
+
+    semversions.iter().map(|v| v.to_string()).collect()
 }
 
 // takes "bun-v1.2", "v1.12.0" and "6" and returns "1.2.0", "1.12.0" and "6.0.0"
 pub fn parse_version_string(version: &str, fill_empty: bool) -> String {
-    let re = Regex::new(r"^(bun-v|v)?(?P<version>\d(\.\d+)*)$").unwrap();
+    let re = Regex::new(r"^(bun-v|v)?(?P<version>\d+(\.\d+)*)$").unwrap();
     let version_matches = re
         .captures(version)
         .expect(&*format!("Invalid version string: {}", version));
@@ -40,11 +50,13 @@ pub fn parse_version_string(version: &str, fill_empty: bool) -> String {
     versionsplit.join(".")
 }
 
-// TODO: Messy function, also sort by version
+// TODO: Messy function
+/// Gets path of version (if multiple matches, sort by highest version)
 pub fn get_version_bin(version: &str, only_bvm: bool) -> Option<String> {
     let bvm_version_list = get_available_versions(true);
     let bvm_version: String = semver_sort(bvm_version_list)
         .iter()
+        .rev()
         .find(|x| x.starts_with(&parse_version_string(version, false)))
         .unwrap_or(&String::from("NOTFOUND"))
         .to_string();
@@ -101,16 +113,6 @@ pub fn get_available_versions(only_bvm: bool) -> Vec<String> {
             path: String::from(bunpath.to_str().unwrap()),
         })
     }
-    if !only_bvm {
-        to_check.push(Version {
-            name: "package-manager".to_owned(),
-            path: String::from(Path::new("/usr/bin/bun").to_str().unwrap()),
-        });
-        to_check.push(Version {
-            name: "system".to_owned(),
-            path: String::from(Path::new("$HOME/.bun/bin/bun").to_str().unwrap()),
-        });
-    }
 
     for path in to_check.iter() {
         if Path::new(&path.path).is_file() {
@@ -118,16 +120,37 @@ pub fn get_available_versions(only_bvm: bool) -> Vec<String> {
         }
     }
 
-    versions
-        .iter()
-        .map(|x| {
-            if x == "package-manager" || x == "system" {
-                x.clone()
-            } else {
-                parse_version_string(x, true)
+    versions = semver_sort(
+        versions
+            .iter()
+            .map(|x| {
+                if x == "package-manager" || x == "system" {
+                    x.clone()
+                } else {
+                    parse_version_string(x, true)
+                }
+            })
+            .collect(),
+    );
+
+    if !only_bvm {
+        let mut sys_check: Vec<Version> = vec![];
+        sys_check.push(Version {
+            name: "package-manager".to_owned(),
+            path: String::from(Path::new("/usr/bin/bun").to_str().unwrap()),
+        });
+        sys_check.push(Version {
+            name: "system".to_owned(),
+            path: String::from(Path::new("$HOME/.bun/bin/bun").to_str().unwrap()),
+        });
+        for path in sys_check.iter() {
+            if Path::new(&path.path).is_file() {
+                versions.push(path.name.clone())
             }
-        })
-        .collect()
+        }
+    };
+
+    versions
 }
 
 pub async fn download_with_progress(url: &str) -> bytes::Bytes {
