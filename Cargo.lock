@@ -122,7 +122,7 @@ checksum = "37ccbd214614c6783386c1af30caf03192f17891059cecc394b4fb119e363de3"
 
 [[package]]
 name = "bvm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "clap",
