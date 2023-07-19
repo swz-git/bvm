@@ -1,45 +1,56 @@
-#[macro_use]
-extern crate serde_derive;
-extern crate tinytemplate;
+use std::{error::Error, fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
-use std::env;
 
-mod cmds;
-pub mod utils;
+#[macro_use]
+extern crate lazy_static;
+
+pub mod bun_version;
+mod commands;
+
+lazy_static! {
+    // ~/.local/share on linux
+    #[derive(Debug)]
+    pub static ref DATA_DIR: PathBuf = {
+        directories::BaseDirs::new()
+            .unwrap()
+            .data_dir().join("bvm").to_path_buf()
+    };
+}
 
 #[derive(Parser)]
-#[clap(author, version, about, long_about = None)]
-#[clap(propagate_version = true)]
+#[command(author, version, about, long_about = None)]
+#[command(propagate_version = true)]
 struct Cli {
-    #[clap(subcommand)]
+    #[command(subcommand)]
     command: Commands,
 }
 
 #[derive(Subcommand)]
-pub enum Commands {
-    /// Install a bun version
-    Install(cmds::cmd_install::CliCommand),
-    /// Choose a bun version to use (global)
-    Use(cmds::cmd_use::CliCommand),
-    /// Print required environment variables
-    Env(cmds::cmd_env::CliCommand),
-    /// List all versions installed
-    List(cmds::cmd_list::CliCommand),
-    /// Uninstall a bun version
-    Uninstall(cmds::cmd_uninstall::CliCommand),
+enum Commands {
+    Env(commands::env::Command),
+    Install(commands::install::Command),
 }
 
-#[tokio::main]
-async fn main() {
-    if env::consts::OS != "linux" {
-        panic!("This program is only supported on Linux, other OSs are planned");
-    }
+fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
-    cmds::cmd_install::match_and_run(&cli.command).await;
-    cmds::cmd_use::match_and_run(&cli.command);
-    cmds::cmd_env::match_and_run(&cli.command);
-    cmds::cmd_list::match_and_run(&cli.command);
-    cmds::cmd_uninstall::match_and_run(&cli.command);
+    if !DATA_DIR.exists() {
+        fs::create_dir(&*DATA_DIR)?
+    }
+    if !DATA_DIR.join("bin").exists() {
+        fs::create_dir(&*DATA_DIR.join("bin"))?
+    }
+    if !DATA_DIR.join("versions").exists() {
+        fs::create_dir(&*DATA_DIR.join("versions"))?
+    }
+
+    // You can check for the existence of subcommands, and if found use their
+    // matches just as you would the top level cmd
+    match &cli.command {
+        Commands::Env(cmd) => commands::env::run(cmd)?,
+        Commands::Install(cmd) => commands::install::run(cmd)?,
+    };
+
+    Ok(())
 }
