@@ -35,6 +35,9 @@ enum Commands {
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
+    // TODO: Add warn if env not activated
+
+    // create DATA_DIR/bin and DATA_DIR/versions for future use
     if !DATA_DIR.exists() {
         fs::create_dir(&*DATA_DIR)?
     }
